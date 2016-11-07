@@ -2,7 +2,7 @@
 
 A [Liveblog](https://www.sourcefabric.org/en/liveblog/) plugin for [Livebridge](https://github.com/dpa-newslab/livebridge).
 
-It allows to use [Sourcefabric Liveblog](https://github.com/liveblog/liveblog) as a source for [Livebridge](https://github.com/dpa-newslab/livebridge).
+It allows to use [Sourcefabric Liveblog](https://github.com/liveblog/liveblog) 3.0 and above as a source for [Livebridge](https://github.com/dpa-newslab/livebridge).
 
 ## Installation
 **Python>=3.5** is needed.
