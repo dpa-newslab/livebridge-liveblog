@@ -18,7 +18,6 @@ import asyncio
 import json
 import logging
 from datetime import datetime
-from dateutil.parser import parse as parse_date
 from os.path import join as path_join
 from urllib.parse import urlencode, urljoin
 from livebridge_liveblog.post import LiveblogPost
