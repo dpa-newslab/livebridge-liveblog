@@ -18,6 +18,7 @@ import asyncio
 import json
 import logging
 from datetime import datetime
+from dateutil.parser import parse as parse_date
 from os.path import join as path_join
 from urllib.parse import urlencode, urljoin
 from livebridge_liveblog.post import LiveblogPost
@@ -31,11 +32,19 @@ class LiveblogSource(LiveblogClient, PollingSource):
 
     type = "liveblog"
 
-    def _get_posts_params(self):
+    async def _get_updated(self):
+        if not self.last_updated:
+            self.last_updated = await self.get_last_updated(self.source_id)
+
+        if not self.last_updated:
+            self.last_updated = datetime.utcnow()
+
+        return {"gt": datetime.strftime(self.last_updated, "%Y-%m-%dT%H:%M:%S+00:00")}
+
+    async def _get_posts_params(self):
         # define "updated" filter param
-        updated = {}
-        if self.last_updated:
-            updated = {"gt": datetime.strftime(self.last_updated, "%Y-%m-%dT%H:%M:%S+00:00")}
+        updated = await self._get_updated()
+
         # build query param
         source = {"query": {
                         "filtered": {
@@ -60,17 +69,20 @@ class LiveblogSource(LiveblogClient, PollingSource):
             ("source", json.dumps(source))
         ])
 
-    def _get_posts_url(self):
+    async def _get_posts_url(self):
         endpoint = self.endpoint[:-1] if self.endpoint.endswith("/") else self.endpoint
-        params = self._get_posts_params()
+        params = await self._get_posts_params()
         url = "{}/{}?{}".format(endpoint, path_join("client_blogs", str(self.source_id), "posts"), params)
         return url
 
     async def poll(self):
-        url = self._get_posts_url()
+        url = await self._get_posts_url()
         res = await self._get(url)
         posts = [LiveblogPost(p) for p in res.get("_items",[])]
-        # ignore first run and check for last update time
-        new = bool(self.last_updated)
-        return posts if new else []
+
+        # remember updated timestamp
+        for p in posts:
+            self.last_updated = p.updated
+
+        return posts
 

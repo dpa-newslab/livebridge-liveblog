@@ -86,31 +86,32 @@ class LiveblogSourceTests(asynctest.TestCase):
         res = await self.client._get("http://example.com")
         assert res == {}
  
-    @asynctest.ignore_loop
-    def test_get_posts_url(self):
-        url = self.client._get_posts_url()
+    async def test_get_posts_url(self):
+        self.client.last_updated = datetime(2014,10,20, 14, 48, 34)
+        url = await self.client._get_posts_url()
         assert type(url) == str
         assert True == url.startswith("https://example.com/api/client_blogs/12345/posts?max_results=20&page=1&source=%7B%22")
         assert True == url.endswith("%7D")
 
         self.client.endpoint= "https://example.com/api/"
-        url = self.client._get_posts_url()
+        url = await self.client._get_posts_url()
         assert type(url) == str
         assert True == url.startswith("https://example.com/api/client_blogs/12345/posts?max_results=20&page=1&source=%7B%22")
         assert True == url.endswith("%7D")
 
-    @asynctest.ignore_loop
-    def test_get_posts_params(self):
+    async def test_get_posts_params_new(self):
         # without last_updated time
-        params = self.client._get_posts_params()
+        self.client._get_updated = asynctest.CoroutineMock(return_value={'gt': '2016-12-13T14:37:25+00:00'})
+        params = await self.client._get_posts_params()
         p = parse_qs(params)
         assert p["max_results"] == ["20"]
         assert p["page"] == ["1"]
-        assert p["source"][0].find('[{"range": {"_updated": {}}}]') > 0
+        assert p["source"][0].find('[{"range": {"_updated": {"gt": "2016-12-13T14:37:25+00:00"}}}]') > 0
 
+    async def test_get_posts_params(self):
         # with last_updated time
         self.client.last_updated = datetime(2014,10,20, 14, 48, 34)
-        params = self.client._get_posts_params()
+        params = await self.client._get_posts_params()
         p = parse_qs(params)
         assert p["max_results"] == ["20"]
         assert p["page"] == ["1"]
@@ -119,26 +120,32 @@ class LiveblogSourceTests(asynctest.TestCase):
         # with last_updated as string, will fail
         self.client.last_updated = "2014-10-20T14:48:34+00:00"
         with self.assertRaises(Exception):
-            params = self.client._get_posts_params()
+            params = await self.client._get_posts_params()
 
     async def test_get_api_posts(self):
-        api_res = load_json('posts.json')
-        self.client._get = asynctest.CoroutineMock(return_value=api_res)
+        self.client._get = asynctest.CoroutineMock(return_value={})
         # first run
         assert self.client.last_updated == None
+        self.client.get_last_updated = asynctest.CoroutineMock(return_value=None)
         posts = await self.client.poll()
         assert type(posts) == list
         assert posts == []
         assert self.client._get.call_args_list[0][0][0].startswith("https://example.com") == True
+        assert self.client.get_last_updated.call_count == 1
+        assert type(self.client.last_updated) == datetime
 
         # second run, set last updated timestamp before
+        api_res = load_json('posts.json')
+        self.client._get = asynctest.CoroutineMock(return_value=api_res)
         self.client.last_updated = datetime(2016, 10, 20, 15, 22, 30)
         posts = await self.client.poll()
         assert type(posts) == list
         assert [] == [p for p in posts if type(p) != LiveblogPost]
+        assert self.client.last_updated == posts[-1].updated
 
     async def test_get_api_posts_failing(self):
         assert self.client.last_updated == None
+        self.client._get_updated = asynctest.CoroutineMock(return_value={"gt": "2016-12-13T13:17:54+00:00"})
         posts = await self.client.poll()
         assert posts == []
         assert self.client.last_updated == None
