@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/dpa-newslab/livebridge-liveblog.svg?branch=master)](https://travis-ci.org/dpa-newslab/livebridge-liveblog)
 [![Coverage Status](https://coveralls.io/repos/github/dpa-newslab/livebridge-liveblog/badge.svg?branch=master)](https://coveralls.io/github/dpa-newslab/livebridge-liveblog?branch=master)
+[![PyPi](https://badge.fury.io/py/livebridge-liveblog.svg)](https://pypi.python.org/pypi/livebridge-liveblog)
 
 A [Liveblog](https://www.sourcefabric.org/en/liveblog/) plugin for [Livebridge](https://github.com/dpa-newslab/livebridge).
 
