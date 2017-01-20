@@ -15,6 +15,7 @@
 # limitations under the License.
 import aiohttp
 import asyncio
+import base64
 import json
 import logging
 from os.path import join as path_join
@@ -35,7 +36,9 @@ class LiveblogClient(object):
         self.user = auth_creds.get("user")
         self.password = auth_creds.get("password")
         self.source_id = config.get("source_id")
+        self.target_id = config.get("target_id")
         self.endpoint = config.get("endpoint")
+        self.endpoint = self.endpoint[:-1] if self.endpoint.endswith("/") else self.endpoint
         self.label = config.get("label")
         self._session = None
 
@@ -44,16 +47,19 @@ class LiveblogClient(object):
             self._session.close()
 
     def __repr__(self):
-        return "<Liveblog [{}] {}client_blogs/{}>".format(self.label, self.endpoint, self.source_id)
+        return "<Liveblog [{}] {}client_blogs/{}>".format(self.label, self.endpoint, self.source_id or self.target_id)
 
     @property
     def session(self):
         if self._session:
             return self._session
-        headers = (("Content-Type", "application/json;charset=utf-8"),)
+        headers = [("Content-Type", "application/json;charset=utf-8"),]
+        if self.session_token:
+            headers.append(("Authorization", "Basic "+base64.b64encode(bytes(self.session_token+":", "UTF-8")).decode("utf-8"),))
         conn = aiohttp.TCPConnector(verify_ssl=False, force_close=True, conn_timeout=10)
         self._session =  aiohttp.ClientSession(connector=conn, headers=headers)
         return self._session
+
 
     async def _login(self):
         params = json.dumps({"username": self.user, "password": self.password})
@@ -62,18 +68,37 @@ class LiveblogClient(object):
             resp = await self._post(login_url, params, status=201)
             if resp.get("token"):
                 self.session_token = resp["token"]
+                self._session.close()
+                self._session = None
                 return self.session_token
         except aiohttp.errors.ClientOSError as e:
-            logger.error("Login failed for [{}] on {}".format(self.user, self.endpoint))
+            logger.error("Login failed for [{}] - {}".format(self, url))
             logger.error(e)
         return False
 
     async def _post(self, url, data, status=200):
-        async with self.session.post(url, data=data.encode()) as resp:
-            if resp.status == status:
-                return await resp.json()
-            else:
-                raise Exception()
+        try:
+            async with self.session.post(url, data=data.encode()) as resp:
+                if resp.status == status:
+                    return await resp.json()
+                else:
+                    logger.error("POST failed: {}".format(await resp.text()))
+                    raise Exception()
+        except Exception as e:
+            logger.error("Posting post failed for [{}] - {}".format(self, url))
+            logger.exception(e)
+
+    async def _patch(self, url, data, status=200, etag=None):
+        try:
+            headers = {"If-Match": etag} if etag else None
+            async with self.session.patch(url, data=data.encode(), headers=headers) as resp:
+                if resp.status == status:
+                    return await resp.json()
+                else:
+                    raise Exception()
+        except Exception as e:
+            logger.error("Patching post failed for [{}] - {}".format(self, url))
+            logger.exception(e)
 
     async def _get(self, url, *, status=200):
         try:
