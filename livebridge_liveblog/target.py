@@ -13,8 +13,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import aiohttp
 import logging
 import json
+from urllib.parse import quote_plus
 from livebridge.base import BaseTarget, TargetResponse
 from livebridge_liveblog.common import LiveblogClient
 
@@ -52,7 +54,7 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
             logger.warning("No id at target found.")
         return etag_at_target
 
-    async def _save_post(self, items):
+    def _build_post_data(self, items):
         refs = []
         for item in items:
             refs.append({"residRef": item["guid"]})
@@ -74,31 +76,89 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
                 "role": "grpRole:Main"
             }]
         }
-        url = "{}/{}".format(self.endpoint, "posts")
-        post = await self._post(url, json.dumps(data), status=201)
-        return post
+        return data
 
 
     async def _save_item(self, data):
+        if data["item_type"] == "image":
+            img_data = await self._save_image(data)
+            logger.debug("IMAGE_DATA {}".format(img_data))
+            data = self._build_image_item(data, img_data)
         data["blog"] = self.target_id
         url = "{}/{}".format(self.endpoint, "items")
         item = await self._post(url, json.dumps(data), status=201)
         return item
 
+    def _build_image_item(self, item, resource):
+        caption = item["meta"].get("caption", "")
+        credit = item["meta"].get("credit", "")
+        new_item = {
+            "item_type": "image",
+            "meta": {
+                "caption": caption,
+                "credit": credit,
+                "media": {
+                    "_id": resource.get("_id"),
+                    "renditions": resource.get("renditions", {}),
+                }
+            }
+        }
+        text = '<figure> <img src="{}" alt="{}" srcset="{} {}w, {} {}w, {} {}w, {} {}w" />'
+        text += '<figcaption>{}</figcaption></figure>'
+        byline = caption
+        if credit:
+            byline += " Credit: {}".format(credit)
+        media = new_item["meta"]["media"]["renditions"]
+        new_item["text"] = text.format(
+            media["thumbnail"]["href"], quote_plus(caption),
+            media["baseImage"]["href"], media["baseImage"]["width"],
+            media["viewImage"]["href"], media["viewImage"]["width"],
+            media["thumbnail"]["href"], media["thumbnail"]["width"],
+            media["original"]["href"], media["original"]["width"],
+            byline)
+        return new_item
+
+    async def _save_image(self, img_item):
+        new_img = None
+        try:
+            url = "{}/{}".format(self.endpoint, "archive")
+            files = {"media": open(img_item["tmp_path"], "rb")}
+            connector = aiohttp.TCPConnector(verify_ssl=False, conn_timeout=10)
+            async with aiohttp.post(url, data=files, headers=self._get_auth_header(), connector=connector) as r:
+                if r.status == 201:
+                    new_img = await r.json()
+                else:
+                    raise Exception("Image{} could not be saved!".format(img_item))
+        except Exception as e:
+            logger.error("Posting image failed for [{}] - {}".format(self, img_item))
+            logger.exception(e)
+        return new_img
+
     async def post_item(self, post):
         """Build your request to create post at service."""
         await self._login()
+        # save item parts
+        logger.debug("IMAGES: {}".format(post.images))
+        logger.debug("POST: {}".format(post.content))
         items = []
         for item in post.content:
             items.append(await self._save_item(item))
-        return TargetResponse(await self._save_post(items))
+        # save new post
+        data = self._build_post_data(items)
+        url = "{}/{}".format(self.endpoint, "posts")
+        return TargetResponse(await self._post(url, json.dumps(data), status=201))
 
     async def update_item(self, post):
         """Build your request to update post at service."""
-        update_url = "/api/update"
         await self._login()
-        data = {"text": post.content, "id": post.data.get("id")}
-        return TargetResponse(await self._do_action(update_url, data))
+        # save item parts
+        items = []
+        for item in post.content:
+            items.append(await self._save_item(item))
+        # patch exsiting post
+        data = self._build_post_data(items)
+        url = "{}/{}/{}".format(self.endpoint, "posts", self.get_id_at_target(post))
+        return TargetResponse(await self._patch(url, json.dumps(data), etag=self.get_etag_at_target(post)))
 
     async def delete_item(self, post):
         """Build your request to update post at service."""

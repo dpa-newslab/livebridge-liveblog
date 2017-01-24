@@ -49,14 +49,17 @@ class LiveblogClient(object):
     def __repr__(self):
         return "<Liveblog [{}] {}client_blogs/{}>".format(self.label, self.endpoint, self.source_id or self.target_id)
 
+    def _get_auth_header(self):
+        return {"Authorization": "Basic "+base64.b64encode(bytes(self.session_token+":", "UTF-8")).decode("utf-8")}
+
     @property
     def session(self):
         if self._session:
             return self._session
-        headers = [("Content-Type", "application/json;charset=utf-8"),]
+        headers = {"Content-Type": "application/json;charset=utf-8"}
         if self.session_token:
-            headers.append(("Authorization", "Basic "+base64.b64encode(bytes(self.session_token+":", "UTF-8")).decode("utf-8"),))
-        conn = aiohttp.TCPConnector(verify_ssl=False, force_close=True, conn_timeout=10)
+            headers.update(self._get_auth_header())
+        conn = aiohttp.TCPConnector(verify_ssl=False, conn_timeout=10)#, force_close=True, conn_timeout=10)
         self._session =  aiohttp.ClientSession(connector=conn, headers=headers)
         return self._session
 
@@ -76,9 +79,9 @@ class LiveblogClient(object):
             logger.error(e)
         return False
 
-    async def _post(self, url, data, status=200):
+    async def _post(self, url, data, status=200, headers=None):
         try:
-            async with self.session.post(url, data=data.encode()) as resp:
+            async with self.session.post(url, data=data.encode(), headers=headers) as resp:
                 if resp.status == status:
                     return await resp.json()
                 else:
