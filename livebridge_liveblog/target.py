@@ -153,7 +153,7 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
         items = []
         for item in post.content:
             items.append(await self._save_item(item))
-        # patch exsiting post
+        # patch existing post
         data = self._build_post_data(items)
         url = "{}/{}/{}".format(self.endpoint, "posts", self.get_id_at_target(post))
         return TargetResponse(await self._patch(url, json.dumps(data), etag=self.get_etag_at_target(post)))
@@ -167,5 +167,3 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
 
     async def handle_extras(self, post):
         return None
-
-

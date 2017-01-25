@@ -60,7 +60,7 @@ class LiveblogClient(object):
         if self.session_token:
             headers.update(self._get_auth_header())
         conn = aiohttp.TCPConnector(verify_ssl=False, conn_timeout=10)#, force_close=True, conn_timeout=10)
-        self._session =  aiohttp.ClientSession(connector=conn, headers=headers)
+        self._session = aiohttp.ClientSession(connector=conn, headers=headers)
         return self._session
 
 
@@ -71,11 +71,13 @@ class LiveblogClient(object):
             resp = await self._post(login_url, params, status=201)
             if resp.get("token"):
                 self.session_token = resp["token"]
-                self._session.close()
-                self._session = None
+                # reset session
+                if self._session:
+                    self._session.close()
+                    self._session = None
                 return self.session_token
         except aiohttp.errors.ClientOSError as e:
-            logger.error("Login failed for [{}] - {}".format(self, url))
+            logger.error("Login failed for [{}] - {}".format(self, login_url))
             logger.error(e)
         return False
 

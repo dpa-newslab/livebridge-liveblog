@@ -28,5 +28,25 @@ class LiveblogLiveblogConverterTest(asynctest.TestCase):
         post = load_json('post_to_convert.json')
         result = await self.converter.convert(post)
         assert type(result.content) == list
+        assert len(result.content) == 6
+        assert result.content[4] == {'item_type': 'text','text': 'Nochmal <i><b>abschließender</b></i> Text.'}
+        assert result.content[1]["item_type"] == "image"
+        assert result.content[3]["meta"]["quote"] == "Mit dem Wissen wächst der Zweifel."
+
+    async def test_convert_invalid_image(self):
+        post = load_json('post_to_convert.json')
+        del post["groups"][1]["refs"][1]["item"]["meta"]["media"]["renditions"]
+        result = await self.converter.convert(post)
         assert len(result.content) == 5
-        assert result.content[3] == {'item_type': 'text','text': 'Nochmal <i><b>abschließender</b></i> Text.'}
+
+    async def test_convert_invalid_items(self):
+        post = load_json('post_to_convert.json')
+        post["groups"] = "foo"
+        result = await self.converter.convert(post)
+        assert len(result.content) == 0
+
+    async def test_convert_unknown_type(self):
+        post = load_json('post_to_convert.json')
+        post["groups"][1]["refs"][1]["item"]["item_type"] = "baz"
+        result = await self.converter.convert(post)
+        assert len(result.content) == 5

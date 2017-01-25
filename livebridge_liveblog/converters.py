@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2016 dpa-infocom GmbH
+# Copyright 2017 dpa-infocom GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -90,7 +90,9 @@ class LiveblogLiveblogConverter(BaseConverter):
                         logger.debug("Item-Type: {}".format(item["item"]["item_type"]))
                         logger.debug(item)
                         logger.debug("\n\n")
+            # filter empty items
+            post_items = list(filter(None, post_items))
         except Exception as e:
             logger.error("Converting post failed.")
             logger.exception(e)
-        return ConversionResult(content=post_items, images=images)#, data={"items": post_items})
+        return ConversionResult(content=post_items, images=images)
