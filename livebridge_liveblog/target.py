@@ -29,7 +29,7 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
     type = "liveblog" 
 
     def get_id_at_target(self, post):
-        """Extracts from the given **post** the id of the target resource.
+        """Extracts id from the given **post** of the target resource.
         
         :param post: post  being processed
         :type post: livebridge.posts.base.BasePost
@@ -42,7 +42,7 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
         return id_at_target
 
     def get_etag_at_target(self, post):
-        """Extracts from the given **post** the etag of the target resource.
+        """Extracts etag from the given **post** of the target resource.
         
         :param post: post  being processed
         :type post: livebridge.posts.base.BasePost
@@ -55,10 +55,6 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
         return etag_at_target
 
     def _build_post_data(self, items):
-        refs = []
-        for item in items:
-            refs.append({"residRef": item["guid"]})
-
         data = {
             "post_status": "open",
             "sticky": False,
@@ -72,55 +68,59 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
                 "role": "grpRole:NEP"
             }, {
                 "id": "main",
-                "refs": refs,
+                "refs": [{"residRef": item["guid"]} for item in items],
                 "role": "grpRole:Main"
             }]
         }
         return data
 
-
-    async def _save_item(self, data):
-        if data["item_type"] == "image":
-            img_data = await self._save_image(data)
-            logger.debug("IMAGE_DATA {}".format(img_data))
-            data = self._build_image_item(data, img_data)
-        data["blog"] = self.target_id
-        url = "{}/{}".format(self.endpoint, "items")
-        item = await self._post(url, json.dumps(data), status=201)
-        return item
-
     def _build_image_item(self, item, resource):
         caption = item["meta"].get("caption", "")
         credit = item["meta"].get("credit", "")
-        new_item = {
-            "item_type": "image",
-            "meta": {
-                "caption": caption,
-                "credit": credit,
-                "media": {
-                    "_id": resource.get("_id"),
-                    "renditions": resource.get("renditions", {}),
-                }
-            }
-        }
+        # byline
+        byline = caption
+        byline += " Credit: {}".format(credit) if credit else ""
+        # text value for image item
         text = '<figure> <img src="{}" alt="{}" srcset="{} {}w, {} {}w, {} {}w, {} {}w" />'
         text += '<figcaption>{}</figcaption></figure>'
-        byline = caption
-        if credit:
-            byline += " Credit: {}".format(credit)
-        media = new_item["meta"]["media"]["renditions"]
-        new_item["text"] = text.format(
+        media = resource.get("renditions", {})
+        text = text.format(
             media["thumbnail"]["href"], quote_plus(caption),
             media["baseImage"]["href"], media["baseImage"]["width"],
             media["viewImage"]["href"], media["viewImage"]["width"],
             media["thumbnail"]["href"], media["thumbnail"]["width"],
             media["original"]["href"], media["original"]["width"],
             byline)
+        # build item
+        new_item = {
+            "item_type": "image",
+            "text": text,
+            "meta": {
+                "caption": caption,
+                "credit": credit,
+                "media": {
+                    "_id": resource.get("_id"),
+                    "renditions": media,
+                }
+            }
+        }
         return new_item
+
+    async def _save_item(self, data):
+        if data["item_type"] == "image":
+            # special handling for image items
+            img_data = await self._save_image(data)
+            data = self._build_image_item(data, img_data)
+        # save item in target blog
+        data["blog"] = self.target_id
+        url = "{}/{}".format(self.endpoint, "items")
+        item = await self._post(url, json.dumps(data), status=201)
+        return item
 
     async def _save_image(self, img_item):
         new_img = None
         try:
+            # upload photo to liveblog instance
             url = "{}/{}".format(self.endpoint, "archive")
             files = {"media": open(img_item["tmp_path"], "rb")}
             connector = aiohttp.TCPConnector(verify_ssl=False, conn_timeout=10)
@@ -135,11 +135,9 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
         return new_img
 
     async def post_item(self, post):
-        """Build your request to create post at service."""
+        """Build your request to create a post."""
         await self._login()
         # save item parts
-        logger.debug("IMAGES: {}".format(post.images))
-        logger.debug("POST: {}".format(post.content))
         items = []
         for item in post.content:
             items.append(await self._save_item(item))
@@ -149,7 +147,7 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
         return TargetResponse(await self._post(url, json.dumps(data), status=201))
 
     async def update_item(self, post):
-        """Build your request to update post at service."""
+        """Build your request to update a post."""
         await self._login()
         # save item parts
         items = []
@@ -161,15 +159,13 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
         return TargetResponse(await self._patch(url, json.dumps(data), etag=self.get_etag_at_target(post)))
 
     async def delete_item(self, post):
-        """Build your request to update post at service."""
+        """Build your request to delete a post."""
         await self._login()
         url = "{}/{}/{}".format(self.endpoint, "posts", self.get_id_at_target(post))
         data = {"deleted": True, "post_status": "open"}
         return TargetResponse(await self._patch(url, json.dumps(data), etag=self.get_etag_at_target(post)))
 
     async def handle_extras(self, post):
-        """Do exta actions here if needed.
-           Will be called after methods above."""
         return None
 
 
