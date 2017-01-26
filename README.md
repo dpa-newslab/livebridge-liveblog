@@ -35,6 +35,26 @@ bridges:
           channel: "channelname"
 ```
 
+Under **targets:**:
+* **target_id** - Blog-ID/Hash of the Liveblog
+* **endpoint** - API endpoint of the Liveblog
+* **draft** - *optional* saves new posts at the target blog as **drafts**.
+* **submit** - *optional* saves new posts at the target blog as **contributions**.
+
+**Example:**
+```
+bridges:
+    - channel: "channelname"
+      type: "acme"
+      label: "Example"
+      targets:
+        - source_id: "56fceedda505e600f7195cch"
+          type: "liveblog"
+          endpoint: "https://liveblog.pro/api/"
+          draft: True
+          label: "Example-Target"
+```
+
 See https://pythonhosted.org/livebridge/control.html for more infos.
 
 ## Testing
