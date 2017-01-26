@@ -66,11 +66,17 @@ class LiveblogTargetTests(asynctest.TestCase):
 
     @asynctest.ignore_loop
     def test_build_post_data(self):
-        res = self.target._build_post_data([{"guid": "urn-1"}, {"guid": "urn-2"}])
-        assert type(res) == dict
+        post = asynctest.Mock(is_highlighted = True, is_sticky=False)
+        res = self.target._build_post_data(post, [{"guid": "urn-1"}, {"guid": "urn-2"}])
         assert res["blog"] == 12345
+        assert res["highlight"] == True
         assert res["sticky"] == False
         assert res["groups"][1]["refs"] == [{'residRef': 'urn-1'}, {'residRef': 'urn-2'}]
+
+        post = asynctest.Mock(is_highlighted=False, is_sticky=True)
+        res = self.target._build_post_data(post, [{"guid": "urn-1"}, {"guid": "urn-2"}])
+        assert res["highlight"] == False
+        assert res["sticky"] == True
 
     @asynctest.ignore_loop
     def test_build_image_item(self):

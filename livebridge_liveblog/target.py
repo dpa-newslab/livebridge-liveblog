@@ -54,11 +54,11 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
             logger.warning("No id at target found.")
         return etag_at_target
 
-    def _build_post_data(self, items):
+    def _build_post_data(self, post, items):
         data = {
             "post_status": "open",
-            "sticky": False,
-            "highlight": False,
+            "sticky": True if post.is_sticky else False,
+            "highlight":  True if post.is_highlighted else False,
             "blog": self.target_id,
             "groups": [{
                 "id": "root",
@@ -142,7 +142,7 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
         for item in post.content:
             items.append(await self._save_item(item))
         # save new post
-        data = self._build_post_data(items)
+        data = self._build_post_data(post, items)
         url = "{}/{}".format(self.endpoint, "posts")
         return TargetResponse(await self._post(url, json.dumps(data), status=201))
 
@@ -154,7 +154,7 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
         for item in post.content:
             items.append(await self._save_item(item))
         # patch existing post
-        data = self._build_post_data(items)
+        data = self._build_post_data(post, items)
         url = "{}/{}/{}".format(self.endpoint, "posts", self.get_id_at_target(post))
         return TargetResponse(await self._patch(url, json.dumps(data), etag=self.get_etag_at_target(post)))
 

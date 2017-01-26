@@ -56,6 +56,10 @@ class LiveblogPost(BasePost):
         return self._deleted
 
     @property
+    def is_highlighted(self):
+      return self.data.get("highlight", False)
+
+    @property
     def is_sticky(self):
        return self.data.get("sticky", False)
 
