@@ -41,6 +41,7 @@ class LiveblogClient(object):
         self.endpoint = self.endpoint[:-1] if self.endpoint.endswith("/") else self.endpoint
         self.label = config.get("label")
         self.save_as_draft = config.get("draft", False)
+        self.save_as_contribution = config.get("submit", False)
         self._session = None
 
     def __del__(self):
@@ -88,7 +89,7 @@ class LiveblogClient(object):
                 if resp.status == status:
                     return await resp.json()
                 else:
-                    logger.error("POST failed: {}".format(await resp.text()))
+                    logger.error("POST failed: {} [{}]".format(await resp.text(), resp.status))
                     raise Exception()
         except Exception as e:
             logger.error("Posting post failed for [{}] - {}".format(self, url))
@@ -101,6 +102,7 @@ class LiveblogClient(object):
                 if resp.status == status:
                     return await resp.json()
                 else:
+                    logger.error("PATCH failed: {} [{}]".format(await resp.text(), resp.status))
                     raise Exception()
         except Exception as e:
             logger.error("Patching post failed for [{}] - {}".format(self, url))

@@ -54,9 +54,16 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
             logger.warning("No id at target found.")
         return etag_at_target
 
+    def _get_post_status(self):
+        if self.save_as_draft == True:
+            return "draft"
+        elif self.save_as_contribution == True:
+            return "submitted"
+        return "open"
+
     def _build_post_data(self, post, items):
         data = {
-            "post_status": "draft" if self.save_as_draft == True else "open",
+            "post_status": self._get_post_status(),
             "sticky": True if post.is_sticky else False,
             "highlight":  True if post.is_highlighted else False,
             "blog": self.target_id,

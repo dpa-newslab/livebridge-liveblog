@@ -46,6 +46,7 @@ class LiveblogTargetTests(asynctest.TestCase):
         assert self.target.endpoint == self.conf["endpoint"]
         assert self.target.label == self.conf["label"]
         assert self.target.save_as_draft == False
+        assert self.target.save_as_contribution == False
         assert issubclass(LiveblogTarget, LiveblogClient) == True
         assert issubclass(LiveblogTarget, BaseTarget) == True
 
@@ -54,6 +55,20 @@ class LiveblogTargetTests(asynctest.TestCase):
         self.conf["draft"] = True
         target = LiveblogTarget(config=self.conf)
         assert target.save_as_draft == True
+
+    @asynctest.ignore_loop
+    def test_conf_submit(self):
+        self.conf["submit"] = True
+        target = LiveblogTarget(config=self.conf)
+        assert target.save_as_contribution == True
+
+    @asynctest.ignore_loop
+    def test_get_post_status(self):
+        assert self.target._get_post_status() == "open"
+        self.target.save_as_contribution = True
+        assert self.target._get_post_status() == "submitted"
+        self.target.save_as_draft = True
+        assert self.target._get_post_status() == "draft"
 
     @asynctest.ignore_loop
     def test_get_id_from_target(self):
@@ -87,6 +102,11 @@ class LiveblogTargetTests(asynctest.TestCase):
         assert res["highlight"] == False
         assert res["sticky"] == True
         assert res["post_status"] == "draft"
+
+        self.target.save_as_draft = False
+        self.target.save_as_contribution = True
+        res = self.target._build_post_data(post, [{"guid": "urn-1"}, {"guid": "urn-2"}])
+        assert res["post_status"] == "submitted"
 
     @asynctest.ignore_loop
     def test_build_image_item(self):
