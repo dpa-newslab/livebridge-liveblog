@@ -56,7 +56,7 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
 
     def _build_post_data(self, post, items):
         data = {
-            "post_status": "open",
+            "post_status": "draft" if self.save_as_draft == True else "open",
             "sticky": True if post.is_sticky else False,
             "highlight":  True if post.is_highlighted else False,
             "blog": self.target_id,

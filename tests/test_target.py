@@ -45,8 +45,15 @@ class LiveblogTargetTests(asynctest.TestCase):
         assert self.target.password == self.conf["auth"]["password"]
         assert self.target.endpoint == self.conf["endpoint"]
         assert self.target.label == self.conf["label"]
+        assert self.target.save_as_draft == False
         assert issubclass(LiveblogTarget, LiveblogClient) == True
         assert issubclass(LiveblogTarget, BaseTarget) == True
+
+    @asynctest.ignore_loop
+    def test_conf_draft(self):
+        self.conf["draft"] = True
+        target = LiveblogTarget(config=self.conf)
+        assert target.save_as_draft == True
 
     @asynctest.ignore_loop
     def test_get_id_from_target(self):
@@ -71,12 +78,15 @@ class LiveblogTargetTests(asynctest.TestCase):
         assert res["blog"] == 12345
         assert res["highlight"] == True
         assert res["sticky"] == False
+        assert res["post_status"] == "open"
         assert res["groups"][1]["refs"] == [{'residRef': 'urn-1'}, {'residRef': 'urn-2'}]
 
+        self.target.save_as_draft = True
         post = asynctest.Mock(is_highlighted=False, is_sticky=True)
         res = self.target._build_post_data(post, [{"guid": "urn-1"}, {"guid": "urn-2"}])
         assert res["highlight"] == False
         assert res["sticky"] == True
+        assert res["post_status"] == "draft"
 
     @asynctest.ignore_loop
     def test_build_image_item(self):

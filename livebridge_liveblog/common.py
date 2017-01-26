@@ -40,6 +40,7 @@ class LiveblogClient(object):
         self.endpoint = config.get("endpoint")
         self.endpoint = self.endpoint[:-1] if self.endpoint.endswith("/") else self.endpoint
         self.label = config.get("label")
+        self.save_as_draft = config.get("draft", False)
         self._session = None
 
     def __del__(self):
