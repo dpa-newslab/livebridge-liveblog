@@ -20,7 +20,7 @@ import json
 import logging
 from os.path import join as path_join
 from urllib.parse import urlencode, urljoin
-
+from livebridge.base import InvalidTargetResource
 
 logger = logging.getLogger(__name__)
 
@@ -101,9 +101,13 @@ class LiveblogClient(object):
             async with self.session.patch(url, data=data.encode(), headers=headers) as resp:
                 if resp.status == status:
                     return await resp.json()
+                elif resp.status == 412:
+                    raise InvalidTargetResource("Resource was edited at target, can't be updated anymore. {}".format(await resp.text()))
                 else:
                     logger.error("PATCH failed: {} [{}]".format(await resp.text(), resp.status))
                     raise Exception()
+        except InvalidTargetResource:
+            raise
         except Exception as e:
             logger.error("Patching post failed for [{}] - {}".format(self, url))
             logger.exception(e)

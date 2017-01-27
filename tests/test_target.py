@@ -17,7 +17,7 @@ import asynctest
 from collections import UserDict
 from livebridge_liveblog import LiveblogTarget 
 from livebridge_liveblog.common import LiveblogClient
-from livebridge.base import BaseTarget, TargetResponse
+from livebridge.base import BaseTarget, TargetResponse, InvalidTargetResource
 from tests import load_json
 from .test_source import TestResponse
 
@@ -173,6 +173,11 @@ class LiveblogTargetTests(asynctest.TestCase):
         assert self.target._save_item.call_count == 3
         assert self.target._patch.call_count == 1
 
+        # no id at target found
+        self.target.get_id_at_target = asynctest.Mock(return_value=None)
+        with self.assertRaises(InvalidTargetResource):
+            await self.target.update_item(asynctest.Mock(content=[1,2,3]))
+
     async def test_delete_item(self):
         self.target._login = asynctest.CoroutineMock(return_value=True)
         self.target._patch = asynctest.CoroutineMock(return_value={"res": "true"})
@@ -181,6 +186,11 @@ class LiveblogTargetTests(asynctest.TestCase):
         assert res.data == {"res": "true"}
         assert self.target._login.call_count == 1
         assert self.target._patch.call_count == 1
+
+        # no id at target found
+        self.target.get_id_at_target = asynctest.Mock(return_value=None)
+        with self.assertRaises(InvalidTargetResource):
+            await self.target.delete_item(asynctest.Mock(content=[1,2,3]))
 
     async def test_handle_extras(self):
         res = await self.target.handle_extras(asynctest.Mock(content=[1,2,3]))

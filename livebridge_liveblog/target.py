@@ -17,7 +17,7 @@ import aiohttp
 import logging
 import json
 from urllib.parse import quote_plus
-from livebridge.base import BaseTarget, TargetResponse
+from livebridge.base import BaseTarget, TargetResponse, InvalidTargetResource
 from livebridge_liveblog.common import LiveblogClient
 
 
@@ -160,15 +160,24 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
         items = []
         for item in post.content:
             items.append(await self._save_item(item))
-        # patch existing post
         data = self._build_post_data(post, items)
-        url = "{}/{}/{}".format(self.endpoint, "posts", self.get_id_at_target(post))
+        # get id of post at target
+        id_at_target = self.get_id_at_target(post)
+        if not id_at_target:
+            raise InvalidTargetResource("No id for resource at target found!")
+        # patch existing post
+        url = "{}/{}/{}".format(self.endpoint, "posts", id_at_target)
         return TargetResponse(await self._patch(url, json.dumps(data), etag=self.get_etag_at_target(post)))
 
     async def delete_item(self, post):
         """Build your request to delete a post."""
         await self._login()
-        url = "{}/{}/{}".format(self.endpoint, "posts", self.get_id_at_target(post))
+        # get id of post at target
+        id_at_target = self.get_id_at_target(post)
+        if not id_at_target:
+            raise InvalidTargetResource("No id for resource at target found!")
+        # delete post
+        url = "{}/{}/{}".format(self.endpoint, "posts", id_at_target)
         data = {"deleted": True, "post_status": "open"}
         return TargetResponse(await self._patch(url, json.dumps(data), etag=self.get_etag_at_target(post)))
 

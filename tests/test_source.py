@@ -20,7 +20,7 @@ from datetime import datetime
 from urllib.parse import parse_qs
 from livebridge_liveblog.common import LiveblogClient
 from livebridge_liveblog import LiveblogPost, LiveblogSource
-from livebridge.base import PollingSource
+from livebridge.base import PollingSource, InvalidTargetResource
 from tests import load_json
 
 
@@ -46,6 +46,10 @@ class TestResponse:
 
     async def text(self):
         return "text"
+
+
+class InvalidResponse(TestResponse):
+    status = 412
 
 
 class LiveblogSourceTests(asynctest.TestCase):
@@ -211,6 +215,13 @@ class LiveblogSourceTests(asynctest.TestCase):
             # failing
             res = await self.client._patch("https://dpa.com/resource", data, 200)
             assert res == None
+
+    async def test_patch_invalid_etag(self):
+        with asynctest.patch("aiohttp.client.ClientSession") as patched:
+            patched.patch = InvalidResponse
+            self.client._session = patched
+            with self.assertRaises(InvalidTargetResource):
+                await self.client._patch("https://dpa.com/resource", '{"one": 1}', 200)
 
     async def test_get(self):
         with asynctest.patch("aiohttp.client.ClientSession") as patched:
