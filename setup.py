@@ -44,5 +44,5 @@ See https://github.com/dpa-newslab/livebridge-liveblog for more infos.
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-        "livebridge>=0.17.0"
+        "livebridge>=0.19.0"
       ])
