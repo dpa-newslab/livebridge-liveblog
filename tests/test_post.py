@@ -98,6 +98,12 @@ class LiveblogPostTest(asynctest.TestCase):
         assert self.lp.is_sticky == True
 
     @asynctest.ignore_loop
+    def test_is_highlighted(self):
+        assert self.lp.is_highlighted == False
+        self.lp.data["highlight"] = True
+        assert self.lp.is_highlighted == True
+
+    @asynctest.ignore_loop
     def test_is_submitted(self):
         assert self.lp.is_submitted == False 
         self.lp.data["post_status"] = "submitted"

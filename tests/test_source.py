@@ -20,8 +20,37 @@ from datetime import datetime
 from urllib.parse import parse_qs
 from livebridge_liveblog.common import LiveblogClient
 from livebridge_liveblog import LiveblogPost, LiveblogSource
-from livebridge.base import PollingSource
+from livebridge.base import PollingSource, InvalidTargetResource
 from tests import load_json
+
+
+class TestResponse:
+
+    def __init__(self, url, data="", headers={}):
+        self._status = 201
+        self.req_data = data
+        self.headers = headers
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        pass
+
+    @property
+    def status(self):
+        return self._status
+
+    async def json(self):
+        return json.loads(self.req_data.decode("utf-8")) if self.req_data else {"foo": "baz"}
+
+    async def text(self):
+        return "text"
+
+
+class InvalidResponse(TestResponse):
+    status = 412
+
 
 class LiveblogSourceTests(asynctest.TestCase):
 
@@ -54,9 +83,12 @@ class LiveblogSourceTests(asynctest.TestCase):
     @asynctest.ignore_loop
     def test_session(self):
         assert self.client._session == None
+        self.client.session_token = "baz"
+        self.client._get_auth_header = asynctest.CoroutineMock(return_value={})
         session = self.client.session
         assert type(session) == aiohttp.client.ClientSession
         assert self.client._session == session
+        assert self.client._get_auth_header.call_count == 1
 
     @asynctest.ignore_loop
     def test_close_session(self):
@@ -67,14 +99,22 @@ class LiveblogSourceTests(asynctest.TestCase):
         self.client.__del__()
         assert session.close.called == 1
 
+    @asynctest.ignore_loop
+    def test_get_auth_header(self):
+        self.client.session_token = "baz"
+        header = self.client._get_auth_header()
+        assert list(header.keys()) == ["Authorization"]
+
     async def test_login_ok(self):
         api_res = {"token": "foo"}
+        self.client._session = asynctest.MagicMock(close=asynctest.CoroutineMock(return_value=None))
         self.client._post =  asynctest.CoroutineMock(return_value=api_res)
         res = await self.client._login()
         assert res == api_res["token"]
         assert self.client._post.call_args_list[0][0][0] == 'https://example.com/api/auth'
         assert json.loads(self.client._post.call_args_list[0][0][1]) == {'password': 'bla', 'username': 'foo'}
         assert self.client._post.call_args_list[0][1]["status"] == 201
+        assert self.client._session == None
 
     async def test_login_not_ok(self):
         self.client._post = asynctest.CoroutineMock(side_effect=aiohttp.errors.ClientOSError)
@@ -150,3 +190,47 @@ class LiveblogSourceTests(asynctest.TestCase):
         assert posts == []
         assert self.client.last_updated == None
 
+    async def test_post(self):
+        data = '{"one": 1, "two": 2}'
+        with asynctest.patch("aiohttp.client.ClientSession") as patched:
+            patched.post = TestResponse
+            self.client._session = patched
+            res = await self.client._post("https://dpa.com/resource", data, 201)
+            assert type(res) == dict
+            assert res == json.loads(data)
+
+            # failing
+            res = await self.client._post("https://dpa.com/resource", data, 200)
+            assert res == None
+
+    async def test_patch(self):
+        data = '{"one": 1, "two": 2}'
+        with asynctest.patch("aiohttp.client.ClientSession") as patched:
+            patched.patch = TestResponse
+            self.client._session = patched
+            res = await self.client._patch("https://dpa.com/resource", data, 201)
+            assert type(res) == dict
+            assert res == json.loads(data)
+
+            # failing
+            res = await self.client._patch("https://dpa.com/resource", data, 200)
+            assert res == None
+
+    async def test_patch_invalid_etag(self):
+        with asynctest.patch("aiohttp.client.ClientSession") as patched:
+            patched.patch = InvalidResponse
+            self.client._session = patched
+            with self.assertRaises(InvalidTargetResource):
+                await self.client._patch("https://dpa.com/resource", '{"one": 1}', 200)
+
+    async def test_get(self):
+        with asynctest.patch("aiohttp.client.ClientSession") as patched:
+            patched.get = TestResponse
+            self.client._session = patched
+            res = await self.client._get("https://dpa.com/resource", status=201)
+            assert type(res) == dict
+            assert res == {"foo": "baz"}
+
+            # failing
+            res = await self.client._get("https://dpa.com/resource", status=404)
+            assert res == {}

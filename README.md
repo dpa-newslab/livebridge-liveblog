@@ -6,7 +6,7 @@
 
 A [Liveblog](https://www.sourcefabric.org/en/liveblog/) plugin for [Livebridge](https://github.com/dpa-newslab/livebridge).
 
-It allows to use [Sourcefabric Liveblog](https://github.com/liveblog/liveblog) 3.0 and above as a source for [Livebridge](https://github.com/dpa-newslab/livebridge).
+It allows to use [Sourcefabric Liveblog](https://github.com/liveblog/liveblog) 3.0 and above as a source or target for [Livebridge](https://github.com/dpa-newslab/livebridge).
 
 ## Installation
 **Python>=3.5** is needed.
@@ -33,6 +33,29 @@ bridges:
       targets:
         - type: "acme"
           channel: "channelname"
+```
+
+Under **targets:**:
+* **target_id** - Blog-ID/Hash of the Liveblog
+* **endpoint** - API endpoint of the Liveblog
+* **draft** - *optional* saves new posts at the target blog as **drafts**.
+* **submit** - *optional* saves new posts at the target blog as **contributions**.
+
+*Warning: When a posting got edited in the target liveblog, the post cannot longer be edited/deleted via Livebridge.*
+
+
+**Example:**
+```
+bridges:
+    - channel: "channelname"
+      type: "acme"
+      label: "Example"
+      targets:
+        - source_id: "56fceedda505e600f7195cch"
+          type: "liveblog"
+          endpoint: "https://liveblog.pro/api/"
+          draft: True
+          label: "Example-Target"
 ```
 
 See https://pythonhosted.org/livebridge/control.html for more infos.
