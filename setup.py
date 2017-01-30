@@ -15,13 +15,13 @@
 # limitations under the License.
 from setuptools import setup, find_packages
 
-version = '0.2.0'
+version = '0.3.0'
 
 setup(name='livebridge-liveblog',
       version=version,
       description="Liveblog plugin for Livebridge.",
       long_description="""\
-Allows to use Sourcefabric Liveblog as source for Livebridge.\
+Allows to use Sourcefabric Liveblog as source or target for Livebridge.\
 See https://github.com/dpa-newslab/livebridge-liveblog for more infos.
 """,
       classifiers=[
