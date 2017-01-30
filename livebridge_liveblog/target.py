@@ -26,14 +26,14 @@ logger = logging.getLogger(__name__)
 
 class LiveblogTarget(LiveblogClient, BaseTarget):
 
-    type = "liveblog" 
+    type = "liveblog"
 
     def get_id_at_target(self, post):
         """Extracts id from the given **post** of the target resource.
         
         :param post: post  being processed
         :type post: livebridge.posts.base.BasePost
-        :returns: string"""  
+        :returns: string"""
         id_at_target = None
         if post.target_doc:
             id_at_target = post.target_doc.get("_id")
@@ -43,10 +43,10 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
 
     def get_etag_at_target(self, post):
         """Extracts etag from the given **post** of the target resource.
-        
+
         :param post: post  being processed
         :type post: livebridge.posts.base.BasePost
-        :returns: string"""  
+        :returns: string"""
         etag_at_target = None
         if post.target_doc:
             etag_at_target = post.target_doc.get("_etag")

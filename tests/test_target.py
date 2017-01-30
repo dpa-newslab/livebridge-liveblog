@@ -15,7 +15,7 @@
 # limitations under the License.
 import asynctest
 from collections import UserDict
-from livebridge_liveblog import LiveblogTarget 
+from livebridge_liveblog import LiveblogTarget
 from livebridge_liveblog.common import LiveblogClient
 from livebridge.base import BaseTarget, TargetResponse, InvalidTargetResource
 from tests import load_json
@@ -33,7 +33,7 @@ class LiveblogTargetTests(asynctest.TestCase):
             "endpoint": "https://example.com/api",
             "label": "Testlabel"
         }
-        self.target = LiveblogTarget(config=self.conf)        
+        self.target = LiveblogTarget(config=self.conf)
 
     @asynctest.ignore_loop
     def test_init(self):
@@ -74,7 +74,7 @@ class LiveblogTargetTests(asynctest.TestCase):
     def test_get_id_from_target(self):
         res = self.target.get_id_at_target(asynctest.MagicMock(target_doc={"_id": "foo"}))
         assert res == "foo"
-    
+
         res = self.target.get_id_at_target(asynctest.MagicMock(target_doc=None))
         assert res == None
 
@@ -82,7 +82,7 @@ class LiveblogTargetTests(asynctest.TestCase):
     def test_get_etag_from_target(self):
         res = self.target.get_etag_at_target(asynctest.MagicMock(target_doc={"_etag": "foo"}))
         assert res == "foo"
-    
+
         res = self.target.get_etag_at_target(asynctest.MagicMock(target_doc=None))
         assert res == None
 
@@ -142,7 +142,7 @@ class LiveblogTargetTests(asynctest.TestCase):
             assert res == {"foo": "baz"}
             assert patched.call_count ==  1
 
-            # failing 
+            # failing
             resp._status = 404
             res = await self.target._save_image(img_item)
             assert res == None
