@@ -78,7 +78,7 @@ class LiveblogClient(object):
                     self._session.close()
                     self._session = None
                 return self.session_token
-        except aiohttp.errors.ClientOSError as e:
+        except aiohttp.client_exceptions.ClientOSError as e:
             logger.error("Login failed for [{}] - {}".format(self, login_url))
             logger.error(e)
         return False
