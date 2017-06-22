@@ -136,7 +136,7 @@ class LiveblogTargetTests(asynctest.TestCase):
         self.target.session_token = "foo"
         img_item = {"item_type": "image", "tmp_path": "tests/test.jpg"}
         resp = TestResponse(url="http://example.com")
-        with asynctest.patch("aiohttp.post") as patched:
+        with asynctest.patch("aiohttp.client.ClientSession.post") as patched:
             patched.return_value = resp
             res = await self.target._save_image(img_item)
             assert res == {"foo": "baz"}

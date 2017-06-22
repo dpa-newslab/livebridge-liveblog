@@ -30,7 +30,7 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
 
     def get_id_at_target(self, post):
         """Extracts id from the given **post** of the target resource.
-        
+
         :param post: post  being processed
         :type post: livebridge.posts.base.BasePost
         :returns: string"""
