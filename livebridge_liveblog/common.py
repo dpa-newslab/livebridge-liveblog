@@ -61,8 +61,8 @@ class LiveblogClient(object):
         headers = {"Content-Type": "application/json;charset=utf-8"}
         if self.session_token:
             headers.update(self._get_auth_header())
-        conn = aiohttp.TCPConnector(verify_ssl=False, conn_timeout=10)#, force_close=True, conn_timeout=10)
-        self._session = aiohttp.ClientSession(connector=conn, headers=headers)
+        conn = aiohttp.TCPConnector(verify_ssl=False)
+        self._session = aiohttp.ClientSession(connector=conn, headers=headers, conn_timeout=10)
         return self._session
 
 
@@ -78,7 +78,7 @@ class LiveblogClient(object):
                     self._session.close()
                     self._session = None
                 return self.session_token
-        except aiohttp.errors.ClientOSError as e:
+        except aiohttp.client_exceptions.ClientOSError as e:
             logger.error("Login failed for [{}] - {}".format(self, login_url))
             logger.error(e)
         return False
