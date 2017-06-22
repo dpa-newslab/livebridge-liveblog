@@ -117,7 +117,7 @@ class LiveblogSourceTests(asynctest.TestCase):
         assert self.client._session == None
 
     async def test_login_not_ok(self):
-        self.client._post = asynctest.CoroutineMock(side_effect=aiohttp.errors.ClientOSError)
+        self.client._post = asynctest.CoroutineMock(side_effect=aiohttp.client_exceptions.ClientOSError)
         res = await self.client._login()
         assert res == False
 

@@ -30,7 +30,7 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
 
     def get_id_at_target(self, post):
         """Extracts id from the given **post** of the target resource.
-        
+
         :param post: post  being processed
         :type post: livebridge.posts.base.BasePost
         :returns: string"""
@@ -129,13 +129,21 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
         try:
             # upload photo to liveblog instance
             url = "{}/{}".format(self.endpoint, "archive")
-            files = {"media": open(img_item["tmp_path"], "rb")}
-            connector = aiohttp.TCPConnector(verify_ssl=False, conn_timeout=10)
-            async with aiohttp.post(url, data=files, headers=self._get_auth_header(), connector=connector) as r:
+            # build form data
+            data = aiohttp.FormData()
+            data.add_field('media',
+               open(img_item["tmp_path"], 'rb'),
+               content_type='image/jpg')
+            # send data
+            connector = aiohttp.TCPConnector(verify_ssl=False)
+            headers = self._get_auth_header()
+            session = aiohttp.ClientSession(connector=connector, headers=headers, conn_timeout=10)
+            async with session.post(url, data=data) as r:
                 if r.status == 201:
                     new_img = await r.json()
                 else:
                     raise Exception("Image{} could not be saved!".format(img_item))
+            session.close()
         except Exception as e:
             logger.error("Posting image failed for [{}] - {}".format(self, img_item))
             logger.exception(e)
