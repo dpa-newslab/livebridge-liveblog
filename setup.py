@@ -15,18 +15,18 @@
 # limitations under the License.
 from setuptools import setup, find_packages
 
-version = '0.3.0'
+version = '0.4.0'
 
 setup(name='livebridge-liveblog',
       version=version,
       description="Liveblog plugin for Livebridge.",
       long_description="""\
-Allows to use Sourcefabric Liveblog as source or target for Livebridge.\
+Allows to use Sourcefabric Liveblog as source or target (experimental) for Livebridge.\
 See https://github.com/dpa-newslab/livebridge-liveblog for more infos.
 """,
       classifiers=[
         "Programming Language :: Python :: 3.5",
-        "Topic :: Communications", 
+        "Topic :: Communications",
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
         "Intended Audience :: Other Audience",
@@ -44,5 +44,5 @@ See https://github.com/dpa-newslab/livebridge-liveblog for more infos.
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-        "livebridge>=0.19.0"
+        "livebridge>=0.20.0"
       ])
