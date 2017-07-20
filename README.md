@@ -15,7 +15,7 @@ pip3 install livebridge-liveblog
 ```
 The plugin will be automatically detected and included from **livebridge** at start time, but it has to be available in **[PYTHONPATH](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH)**
 
-See https://pythonhosted.org/livebridge/plugins.html#installing-plugins for more infos.
+See http://livebridge.readthedocs.io/en/latest/plugins.html#installing-plugins for more infos.
 
 ## Plugin specific control file parameters
 
@@ -58,7 +58,7 @@ bridges:
           label: "Example-Target"
 ```
 
-See https://pythonhosted.org/livebridge/control.html for more infos.
+See http://livebridge.readthedocs.io/en/latest/control.html for more infos.
 
 ## Testing
 **Livebridge** uses [py.test](http://pytest.org/) and [asynctest](http://asynctest.readthedocs.io/) for testing.
