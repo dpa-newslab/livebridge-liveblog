@@ -57,7 +57,7 @@ class LiveblogPost(BasePost):
 
     @property
     def is_highlighted(self):
-      return self.data.get("highlight", False)
+      return self.data.get("lb_highlight", False)
 
     @property
     def is_sticky(self):

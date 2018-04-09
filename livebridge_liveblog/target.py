@@ -65,7 +65,7 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
         data = {
             "post_status": self._get_post_status(),
             "sticky": True if post.is_sticky else False,
-            "highlight":  True if post.is_highlighted else False,
+            "lb_highlight":  True if post.is_highlighted else False,
             "blog": self.target_id,
             "groups": [{
                 "id": "root",

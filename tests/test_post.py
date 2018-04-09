@@ -100,7 +100,7 @@ class LiveblogPostTest(asynctest.TestCase):
     @asynctest.ignore_loop
     def test_is_highlighted(self):
         assert self.lp.is_highlighted == False
-        self.lp.data["highlight"] = True
+        self.lp.data["lb_highlight"] = True
         assert self.lp.is_highlighted == True
 
     @asynctest.ignore_loop

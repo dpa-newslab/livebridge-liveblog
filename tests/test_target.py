@@ -91,7 +91,7 @@ class LiveblogTargetTests(asynctest.TestCase):
         post = asynctest.Mock(is_highlighted = True, is_sticky=False)
         res = self.target._build_post_data(post, [{"guid": "urn-1"}, {"guid": "urn-2"}])
         assert res["blog"] == 12345
-        assert res["highlight"] == True
+        assert res["lb_highlight"] == True
         assert res["sticky"] == False
         assert res["post_status"] == "open"
         assert res["groups"][1]["refs"] == [{'residRef': 'urn-1'}, {'residRef': 'urn-2'}]
@@ -99,7 +99,7 @@ class LiveblogTargetTests(asynctest.TestCase):
         self.target.save_as_draft = True
         post = asynctest.Mock(is_highlighted=False, is_sticky=True)
         res = self.target._build_post_data(post, [{"guid": "urn-1"}, {"guid": "urn-2"}])
-        assert res["highlight"] == False
+        assert res["lb_highlight"] == False
         assert res["sticky"] == True
         assert res["post_status"] == "draft"
 
