@@ -37,6 +37,7 @@ class LiveblogClient(object):
         self.password = auth_creds.get("password")
         self.source_id = config.get("source_id")
         self.target_id = config.get("target_id")
+        self.verify_ssl = config.get("verify_ssl", True)
         self.endpoint = config.get("endpoint")
         self.endpoint = self.endpoint[:-1] if self.endpoint.endswith("/") else self.endpoint
         self.label = config.get("label")
@@ -61,7 +62,7 @@ class LiveblogClient(object):
         headers = {"Content-Type": "application/json;charset=utf-8"}
         if self.session_token:
             headers.update(self._get_auth_header())
-        conn = aiohttp.TCPConnector(verify_ssl=False)
+        conn = aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
         self._session = aiohttp.ClientSession(connector=conn, headers=headers, conn_timeout=10)
         return self._session
 

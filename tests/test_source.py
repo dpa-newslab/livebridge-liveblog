@@ -62,7 +62,8 @@ class LiveblogSourceTests(asynctest.TestCase):
             },
             "source_id": 12345,
             "endpoint": "https://example.com/api",
-            "label": "Testlabel"
+            "label": "Testlabel",
+            "verify_ssl": False,
         }
         self.client = LiveblogSource(config=self.conf)
 
@@ -77,6 +78,7 @@ class LiveblogSourceTests(asynctest.TestCase):
         assert self.client.source_id == self.conf["source_id"]
         assert self.client.endpoint == self.conf["endpoint"]
         assert self.client.label == self.conf["label"]
+        assert self.client.verify_ssl == self.conf["verify_ssl"]
         assert issubclass(LiveblogSource, LiveblogClient) == True
         assert issubclass(LiveblogSource, PollingSource) == True
 
