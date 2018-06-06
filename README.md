@@ -22,6 +22,7 @@ See http://livebridge.readthedocs.io/en/latest/plugins.html#installing-plugins f
 Under **bridges**:
 * **source_id** - Blog-ID/Hash of the Liveblog
 * **endpoint** - API endpoint of the Liveblog
+* **verify_ssl** - SSL check for source, default **true**
 
 **Example:**
 ```
@@ -39,7 +40,8 @@ Under **targets**: - **(experimental feature)**
 * **target_id** - Blog-ID/Hash of the Liveblog
 * **endpoint** - API endpoint of the Liveblog
 * **draft** - *optional* saves new posts at the target blog as **drafts**.
-* **submit** - *optional* saves new posts at the target blog as **contributions**.
+* **submit** - *optional* saves new posts at the target bplog as **contributions**.
+* **verify_ssl** - SSL check for target, default **true**
 
 *Warning: When a posting got edited in the target liveblog, the post cannot longer be edited/deleted via Livebridge.*
 
