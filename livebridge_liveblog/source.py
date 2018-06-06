@@ -31,6 +31,20 @@ class LiveblogSource(LiveblogClient, PollingSource):
 
     type = "liveblog"
 
+    def _reset_source_meta(self):
+        logger.debug("++++++++++ resetting source meta")
+        self.source_meta = {}
+
+    async def _check_source_status(self):
+        if not self.source_meta:
+            asyncio.get_event_loop().call_later(30, self._reset_source_meta)
+
+            url = "{}/{}".format(self.endpoint, path_join("client_blogs", str(self.source_id)))
+            logger.debug("#######  checking blog meta")
+            self.source_meta = await self._get(url)
+            self.is_archived = True if self.source_meta.get("blog_status") == "closed" else False
+        return False if self.is_archived else True
+
     async def _get_updated(self):
         if not self.last_updated:
             self.last_updated = await self.get_last_updated(self.source_id)
@@ -69,16 +83,18 @@ class LiveblogSource(LiveblogClient, PollingSource):
         ])
 
     async def _get_posts_url(self):
-        endpoint = self.endpoint[:-1] if self.endpoint.endswith("/") else self.endpoint
         params = await self._get_posts_params()
-        url = "{}/{}?{}".format(endpoint, path_join("client_blogs", str(self.source_id), "posts"), params)
+        url = "{}/{}?{}".format(self.endpoint, path_join("client_blogs", str(self.source_id), "posts"), params)
         return url
 
     async def poll(self):
+        if not await self._check_source_status():
+            logger.info("==> Liveblog {} archived, skipping poll requests ...".format(self.source_id))
+            return []
         url = await self._get_posts_url()
         res = await self._get(url)
         posts = [LiveblogPost(p) for p in res.get("_items",[])]
-
+        logger.debug("++>Calling {}".format(self.source_id))
         # remember updated timestamp
         for p in posts:
             self.last_updated = p.updated

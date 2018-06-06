@@ -45,6 +45,9 @@ class LiveblogClient(object):
         self.save_as_contribution = config.get("submit", False)
         self._session = None
 
+        self.source_meta = {}
+        self.is_archived = False
+
     def __del__(self):
         if self._session:
             self._session.close()
@@ -65,7 +68,6 @@ class LiveblogClient(object):
         conn = aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
         self._session = aiohttp.ClientSession(connector=conn, headers=headers, conn_timeout=10)
         return self._session
-
 
     async def _login(self):
         params = json.dumps({"username": self.user, "password": self.password})
