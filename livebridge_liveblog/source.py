@@ -32,18 +32,24 @@ class LiveblogSource(LiveblogClient, PollingSource):
     type = "liveblog"
 
     def _reset_source_meta(self):
-        logger.debug("++++++++++ resetting source meta")
         self.source_meta = {}
 
-    async def _check_source_status(self):
+    async def _is_source_open(self):
         if not self.source_meta:
-            asyncio.get_event_loop().call_later(30, self._reset_source_meta)
+            # schedule reset of source_meta to force refetch
+            self.source_check_handler = asyncio.get_event_loop().call_later(
+                self.source_check_interval, self._reset_source_meta)
 
             url = "{}/{}".format(self.endpoint, path_join("client_blogs", str(self.source_id)))
-            logger.debug("#######  checking blog meta")
             self.source_meta = await self._get(url)
-            self.is_archived = True if self.source_meta.get("blog_status") == "closed" else False
-        return False if self.is_archived else True
+
+            # handle state
+            blog_status = self.source_meta.get("blog_status")
+            is_open = False if blog_status == "closed" else True
+            if is_open != self.source_status:
+                logger.info("Liveblog status for {} changed to [{}]".format(self.source_id, blog_status))
+            self.source_status = is_open
+        return self.source_status
 
     async def _get_updated(self):
         if not self.last_updated:
@@ -88,13 +94,13 @@ class LiveblogSource(LiveblogClient, PollingSource):
         return url
 
     async def poll(self):
-        if not await self._check_source_status():
-            logger.info("==> Liveblog {} archived, skipping poll requests ...".format(self.source_id))
+        if not await self._is_source_open():
             return []
+
         url = await self._get_posts_url()
         res = await self._get(url)
         posts = [LiveblogPost(p) for p in res.get("_items",[])]
-        logger.debug("++>Calling {}".format(self.source_id))
+
         # remember updated timestamp
         for p in posts:
             self.last_updated = p.updated

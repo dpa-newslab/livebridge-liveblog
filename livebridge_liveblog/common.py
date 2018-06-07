@@ -46,11 +46,9 @@ class LiveblogClient(object):
         self._session = None
 
         self.source_meta = {}
-        self.is_archived = False
-
-    def __del__(self):
-        if self._session:
-            self._session.close()
+        self.source_status = True
+        self.source_check_interval = int(config.get("source_check_interval", 600))
+        self.source_check_handler = None
 
     def __repr__(self):
         return "<Liveblog [{}] {}client_blogs/{}>".format(self.label, self.endpoint, self.source_id or self.target_id)
@@ -68,6 +66,13 @@ class LiveblogClient(object):
         conn = aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
         self._session = aiohttp.ClientSession(connector=conn, headers=headers, conn_timeout=10)
         return self._session
+
+    async def stop(self):
+        if self.source_check_handler is not None:
+            self.source_check_handler.cancel()
+
+        if self._session:
+            self._session.close()
 
     async def _login(self):
         params = json.dumps({"username": self.user, "password": self.password})
@@ -121,7 +126,7 @@ class LiveblogClient(object):
                 if resp.status == status:
                     return await resp.json()
                 else:
-                    logger.warning("No posts got fetched! [Status: {}]".format(resp.status))
+                    logger.warning("No data got fetched! [Status: {}] - {}".format(resp.status, url))
         except Exception as e:
             logger.error("Requesting posts failed for [{}] {}client_blogs/{}".format(self.label or "-", self.endpoint, self.source_id))
             logger.error(e)

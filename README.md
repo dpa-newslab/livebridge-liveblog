@@ -23,6 +23,7 @@ Under **bridges**:
 * **source_id** - Blog-ID/Hash of the Liveblog
 * **endpoint** - API endpoint of the Liveblog
 * **verify_ssl** - SSL check for source, default **true**
+* **source_check_interval** - Interval in seconds for blog status checks (open/closed), defaults to **600**
 
 **Example:**
 ```
