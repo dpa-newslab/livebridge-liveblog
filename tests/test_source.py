@@ -67,6 +67,9 @@ class LiveblogSourceTests(asynctest.TestCase):
         }
         self.client = LiveblogSource(config=self.conf)
 
+    async def tearDown(self):
+        await self.client.stop()
+
     @asynctest.ignore_loop
     def test_init(self):
         assert self.client.type == "liveblog"
@@ -92,14 +95,15 @@ class LiveblogSourceTests(asynctest.TestCase):
         assert self.client._session == session
         assert self.client._get_auth_header.call_count == 1
 
-    @asynctest.ignore_loop
-    def test_close_session(self):
+    async def test_stop_bridge(self):
         session = asynctest.MagicMock()
         session.close =  asynctest.CoroutineMock(return_value=True)
         self.client._session = session
+        self.client.source_check_handler = asynctest.MagicMock(cancel=asynctest.CoroutineMock(return_value=None))
         assert self.client.session == session
-        self.client.__del__()
+        await self.client.stop()
         assert session.close.called == 1
+        assert self.client.source_check_handler.cancel.call_count == 1
 
     @asynctest.ignore_loop
     def test_get_auth_header(self):
@@ -124,18 +128,13 @@ class LiveblogSourceTests(asynctest.TestCase):
         assert res == False
 
     async def test_get_failing(self):
-        self.client._session = "will fail"
+        self.client._session = asynctest.MagicMock(
+            close=asynctest.CoroutineMock(return_value=None))
         res = await self.client._get("http://example.com")
         assert res == {}
  
     async def test_get_posts_url(self):
         self.client.last_updated = datetime(2014,10,20, 14, 48, 34)
-        url = await self.client._get_posts_url()
-        assert type(url) == str
-        assert True == url.startswith("https://example.com/api/client_blogs/12345/posts?max_results=20&page=1&source=%7B%22")
-        assert True == url.endswith("%7D")
-
-        self.client.endpoint= "https://example.com/api/"
         url = await self.client._get_posts_url()
         assert type(url) == str
         assert True == url.startswith("https://example.com/api/client_blogs/12345/posts?max_results=20&page=1&source=%7B%22")
@@ -165,6 +164,7 @@ class LiveblogSourceTests(asynctest.TestCase):
             params = await self.client._get_posts_params()
 
     async def test_get_api_posts(self):
+        self.client._is_source_open = asynctest.CoroutineMock(return_value=True)
         self.client._get = asynctest.CoroutineMock(return_value={})
         # first run
         assert self.client.last_updated == None
@@ -185,7 +185,16 @@ class LiveblogSourceTests(asynctest.TestCase):
         assert [] == [p for p in posts if type(p) != LiveblogPost]
         assert self.client.last_updated == posts[-1].updated
 
+        self.client._get = asynctest.CoroutineMock(return_value=api_res)
+        self.client._is_source_open = asynctest.CoroutineMock(return_value=False)
+        posts = await self.client.poll()
+        assert type(posts) == list
+        assert posts == []
+        assert self.client._get.call_count == 0
+        assert self.client._is_source_open.call_count == 1
+
     async def test_get_api_posts_failing(self):
+        self.client._is_source_open = asynctest.CoroutineMock(return_value=True)
         assert self.client.last_updated == None
         self.client._get_updated = asynctest.CoroutineMock(return_value={"gt": "2016-12-13T13:17:54+00:00"})
         posts = await self.client.poll()
@@ -236,3 +245,23 @@ class LiveblogSourceTests(asynctest.TestCase):
             # failing
             res = await self.client._get("https://dpa.com/resource", status=404)
             assert res == {}
+
+    async def test_get_catch_exception(self):
+        res = await self.client._get(None)
+        assert res == {}
+
+    @asynctest.ignore_loop
+    def test_reset_blog_meta(self):
+        self.client.source_meta = {"foo": "bla"}
+        self.client._reset_source_meta()
+        assert self.client.source_meta == {}
+
+    async def test_is_source_open(self):
+        self.client._get = asynctest.CoroutineMock(return_value={"blog_status": "open"})
+        res = await self.client._is_source_open()
+        assert res == True
+
+        self.client.source_meta = {}
+        self.client._get = asynctest.CoroutineMock(return_value={"blog_status": "closed"})
+        res = await self.client._is_source_open()
+        assert res == False
