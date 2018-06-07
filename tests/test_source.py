@@ -99,11 +99,11 @@ class LiveblogSourceTests(asynctest.TestCase):
         session = asynctest.MagicMock()
         session.close =  asynctest.CoroutineMock(return_value=True)
         self.client._session = session
-        self.client.source_check_handler = asynctest.MagicMock(cancel=asynctest.CoroutineMock(return_value=None))
+        self.client._source_check_handler = asynctest.MagicMock(cancel=asynctest.CoroutineMock(return_value=None))
         assert self.client.session == session
         await self.client.stop()
         assert session.close.called == 1
-        assert self.client.source_check_handler.cancel.call_count == 1
+        assert self.client._source_check_handler.cancel.call_count == 1
 
     @asynctest.ignore_loop
     def test_get_auth_header(self):
@@ -252,16 +252,16 @@ class LiveblogSourceTests(asynctest.TestCase):
 
     @asynctest.ignore_loop
     def test_reset_blog_meta(self):
-        self.client.source_meta = {"foo": "bla"}
+        self.client._source_meta = {"foo": "bla"}
         self.client._reset_source_meta()
-        assert self.client.source_meta == {}
+        assert self.client._source_meta == {}
 
     async def test_is_source_open(self):
         self.client._get = asynctest.CoroutineMock(return_value={"blog_status": "open"})
         res = await self.client._is_source_open()
         assert res == True
 
-        self.client.source_meta = {}
+        self.client._source_meta = {}
         self.client._get = asynctest.CoroutineMock(return_value={"blog_status": "closed"})
         res = await self.client._is_source_open()
         assert res == False

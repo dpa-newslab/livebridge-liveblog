@@ -32,24 +32,24 @@ class LiveblogSource(LiveblogClient, PollingSource):
     type = "liveblog"
 
     def _reset_source_meta(self):
-        self.source_meta = {}
+        self._source_meta = {}
 
     async def _is_source_open(self):
-        if not self.source_meta:
-            # schedule reset of source_meta to force refetch
-            self.source_check_handler = asyncio.get_event_loop().call_later(
-                self.source_check_interval, self._reset_source_meta)
+        if not self._source_meta:
+            # schedule reset of _source_meta to force refetch
+            self._source_check_handler = asyncio.get_event_loop().call_later(
+                self._source_check_interval, self._reset_source_meta)
 
             url = "{}/{}".format(self.endpoint, path_join("client_blogs", str(self.source_id)))
-            self.source_meta = await self._get(url)
+            self._source_meta = await self._get(url)
 
             # handle state
-            blog_status = self.source_meta.get("blog_status")
+            blog_status = self._source_meta.get("blog_status")
             is_open = False if blog_status == "closed" else True
-            if is_open != self.source_status:
+            if is_open != self._source_status:
                 logger.info("Liveblog status for {} changed to [{}]".format(self.source_id, blog_status))
-            self.source_status = is_open
-        return self.source_status
+            self._source_status = is_open
+        return self._source_status
 
     async def _get_updated(self):
         if not self.last_updated:

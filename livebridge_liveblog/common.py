@@ -45,10 +45,10 @@ class LiveblogClient(object):
         self.save_as_contribution = config.get("submit", False)
         self._session = None
 
-        self.source_meta = {}
-        self.source_status = True
-        self.source_check_interval = int(config.get("source_check_interval", 600))
-        self.source_check_handler = None
+        self._source_meta = {}
+        self._source_status = True
+        self._source_check_interval = int(config.get("source_check_interval", 600))
+        self._source_check_handler = None
 
     def __repr__(self):
         return "<Liveblog [{}] {}client_blogs/{}>".format(self.label, self.endpoint, self.source_id or self.target_id)
@@ -68,8 +68,8 @@ class LiveblogClient(object):
         return self._session
 
     async def stop(self):
-        if self.source_check_handler is not None:
-            self.source_check_handler.cancel()
+        if self._source_check_handler is not None:
+            self._source_check_handler.cancel()
 
         if self._session:
             self._session.close()
