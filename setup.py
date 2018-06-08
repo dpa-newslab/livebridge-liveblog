@@ -15,7 +15,7 @@
 # limitations under the License.
 from setuptools import setup, find_packages
 
-version = '0.4.1'
+version = '0.5.0'
 
 setup(name='livebridge-liveblog',
       version=version,
@@ -34,7 +34,7 @@ See https://github.com/dpa-newslab/livebridge-liveblog for more infos.
         "Environment :: Console",
         "Environment :: Plugins",
         ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
-      keywords=['liveticker','scribblelive','syndication'],
+      keywords=['liveticker','scribblelive','syndication','realtime'],
       author='dpa-infocom GmbH',
       maintainer='Martin Borho',
       maintainer_email='martin@borho.net',
@@ -44,5 +44,5 @@ See https://github.com/dpa-newslab/livebridge-liveblog for more infos.
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-        "livebridge>=0.20.0"
+        "livebridge>=0.25.0"
       ])
