@@ -76,7 +76,7 @@ class LiveblogClient(object):
 
     async def _login(self):
         params = json.dumps({"username": self.user, "password": self.password})
-        login_url = "{}/auth".format(self.endpoint)
+        login_url = "{}/auth_db".format(self.endpoint)
         try:
             resp = await self._post(login_url, params, status=201)
             if resp.get("token"):

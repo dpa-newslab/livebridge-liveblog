@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import aiohttp
+import asyncio
 import logging
 import json
 from urllib.parse import quote_plus
@@ -149,6 +150,18 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
             logger.exception(e)
         return new_img
 
+    async def _patch_order(self, target_doc, order):
+        new_doc = None
+        try:
+            url = "{}/{}/{}".format(self.endpoint, "posts", target_doc["_id"])
+            data = {"order": order, "post_status":"open"}
+            new_doc = await self._patch(url, json.dumps(data), etag=target_doc.get("_etag"))
+            logger.debug(new_doc)
+        except Exception as exc:
+            logger.error("Patching liveblog post sort order, failed: {}".format(exc))
+        finally:
+            return new_doc
+
     async def post_item(self, post):
         """Build your request to create a post."""
         await self._login()
@@ -190,4 +203,8 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
         return TargetResponse(await self._patch(url, json.dumps(data), etag=self.get_etag_at_target(post)))
 
     async def handle_extras(self, post):
+        await asyncio.sleep(1)
+        await self._login()
+        if hasattr(post, "has_order") and post.has_order:
+            return TargetResponse(await self._patch_order(post.target_doc,  post.has_order))
         return None
