@@ -72,7 +72,7 @@ class LiveblogClient(object):
             self._source_check_handler.cancel()
 
         if self._session:
-            self._session.close()
+            await self._session.close()
 
     async def _login(self):
         params = json.dumps({"username": self.user, "password": self.password})

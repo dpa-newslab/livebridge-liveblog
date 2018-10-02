@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2016 dpa-infocom GmbH
+# Copyright 2016, 2018 dpa-infocom GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 # limitations under the License.
 from setuptools import setup, find_packages
 
-version = '0.5.0'
+version = '0.6rc0'
 
 setup(name='livebridge-liveblog',
       version=version,
@@ -44,5 +44,5 @@ See https://github.com/dpa-newslab/livebridge-liveblog for more infos.
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-        "livebridge>=0.25.0"
+        "livebridge>=0.26.0"
       ])
