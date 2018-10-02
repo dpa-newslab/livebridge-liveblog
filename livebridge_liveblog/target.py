@@ -135,7 +135,7 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
                open(img_item["tmp_path"], 'rb'),
                content_type='image/jpg')
             # send data
-            connector = aiohttp.TCPConnector(verify_ssl=False)
+            connector = aiohttp.TCPConnector(ssl=False)
             headers = self._get_auth_header()
             session = aiohttp.ClientSession(connector=connector, headers=headers, conn_timeout=10)
             async with session.post(url, data=data) as r:
@@ -143,7 +143,7 @@ class LiveblogTarget(LiveblogClient, BaseTarget):
                     new_img = await r.json()
                 else:
                     raise Exception("Image{} could not be saved!".format(img_item))
-            session.close()
+            await session.close()
         except Exception as e:
             logger.error("Posting image failed for [{}] - {}".format(self, img_item))
             logger.exception(e)

@@ -35,7 +35,7 @@ class LiveblogTargetTests(asynctest.TestCase):
         }
         self.target = LiveblogTarget(config=self.conf)
 
-    @asynctest.ignore_loop
+    @asynctest.fail_on(unused_loop=False)
     def test_init(self):
         assert self.target.target_id == self.conf["target_id"]
         assert self.target.type == "liveblog"
@@ -50,19 +50,19 @@ class LiveblogTargetTests(asynctest.TestCase):
         assert issubclass(LiveblogTarget, LiveblogClient) == True
         assert issubclass(LiveblogTarget, BaseTarget) == True
 
-    @asynctest.ignore_loop
+    @asynctest.fail_on(unused_loop=False)
     def test_conf_draft(self):
         self.conf["draft"] = True
         target = LiveblogTarget(config=self.conf)
         assert target.save_as_draft == True
 
-    @asynctest.ignore_loop
+    @asynctest.fail_on(unused_loop=False)
     def test_conf_submit(self):
         self.conf["submit"] = True
         target = LiveblogTarget(config=self.conf)
         assert target.save_as_contribution == True
 
-    @asynctest.ignore_loop
+    @asynctest.fail_on(unused_loop=False)
     def test_get_post_status(self):
         assert self.target._get_post_status() == "open"
         self.target.save_as_contribution = True
@@ -70,7 +70,7 @@ class LiveblogTargetTests(asynctest.TestCase):
         self.target.save_as_draft = True
         assert self.target._get_post_status() == "draft"
 
-    @asynctest.ignore_loop
+    @asynctest.fail_on(unused_loop=False)
     def test_get_id_from_target(self):
         res = self.target.get_id_at_target(asynctest.MagicMock(target_doc={"_id": "foo"}))
         assert res == "foo"
@@ -78,7 +78,7 @@ class LiveblogTargetTests(asynctest.TestCase):
         res = self.target.get_id_at_target(asynctest.MagicMock(target_doc=None))
         assert res == None
 
-    @asynctest.ignore_loop
+    @asynctest.fail_on(unused_loop=False)
     def test_get_etag_from_target(self):
         res = self.target.get_etag_at_target(asynctest.MagicMock(target_doc={"_etag": "foo"}))
         assert res == "foo"
@@ -86,7 +86,7 @@ class LiveblogTargetTests(asynctest.TestCase):
         res = self.target.get_etag_at_target(asynctest.MagicMock(target_doc=None))
         assert res == None
 
-    @asynctest.ignore_loop
+    @asynctest.fail_on(unused_loop=False)
     def test_build_post_data(self):
         post = asynctest.Mock(is_highlighted = True, is_sticky=False)
         res = self.target._build_post_data(post, [{"guid": "urn-1"}, {"guid": "urn-2"}])
@@ -108,7 +108,7 @@ class LiveblogTargetTests(asynctest.TestCase):
         res = self.target._build_post_data(post, [{"guid": "urn-1"}, {"guid": "urn-2"}])
         assert res["post_status"] == "submitted"
 
-    @asynctest.ignore_loop
+    @asynctest.fail_on(unused_loop=False)
     def test_build_image_item(self):
         post = load_json('post_to_convert.json')
         resource = post["groups"][1]["refs"][1]["item"]["meta"]["media"]

@@ -26,6 +26,7 @@ from tests import load_json
 
 class TestResponse:
 
+    __test__ = False
     def __init__(self, url, data="", headers={}):
         self._status = 201
         self.req_data = data
@@ -70,7 +71,7 @@ class LiveblogSourceTests(asynctest.TestCase):
     async def tearDown(self):
         await self.client.stop()
 
-    @asynctest.ignore_loop
+    @asynctest.fail_on(unused_loop=False)
     def test_init(self):
         assert self.client.type == "liveblog"
         assert self.client.mode == "polling"
@@ -85,7 +86,7 @@ class LiveblogSourceTests(asynctest.TestCase):
         assert issubclass(LiveblogSource, LiveblogClient) == True
         assert issubclass(LiveblogSource, PollingSource) == True
 
-    @asynctest.ignore_loop
+    @asynctest.fail_on(unused_loop=False)
     def test_session(self):
         assert self.client._session == None
         self.client.session_token = "baz"
@@ -105,7 +106,7 @@ class LiveblogSourceTests(asynctest.TestCase):
         assert session.close.called == 1
         assert self.client._source_check_handler.cancel.call_count == 1
 
-    @asynctest.ignore_loop
+    @asynctest.fail_on(unused_loop=False)
     def test_get_auth_header(self):
         self.client.session_token = "baz"
         header = self.client._get_auth_header()
@@ -205,6 +206,7 @@ class LiveblogSourceTests(asynctest.TestCase):
         data = '{"one": 1, "two": 2}'
         with asynctest.patch("aiohttp.client.ClientSession") as patched:
             patched.post = TestResponse
+            patched.close = asynctest.CoroutineMock(return_value=None)
             self.client._session = patched
             res = await self.client._post("https://dpa.com/resource", data, 201)
             assert type(res) == dict
@@ -218,6 +220,7 @@ class LiveblogSourceTests(asynctest.TestCase):
         data = '{"one": 1, "two": 2}'
         with asynctest.patch("aiohttp.client.ClientSession") as patched:
             patched.patch = TestResponse
+            patched.close = asynctest.CoroutineMock(return_value=None)
             self.client._session = patched
             res = await self.client._patch("https://dpa.com/resource", data, 201)
             assert type(res) == dict
@@ -230,6 +233,7 @@ class LiveblogSourceTests(asynctest.TestCase):
     async def test_patch_invalid_etag(self):
         with asynctest.patch("aiohttp.client.ClientSession") as patched:
             patched.patch = InvalidResponse
+            patched.close = asynctest.CoroutineMock(return_value=None)
             self.client._session = patched
             with self.assertRaises(InvalidTargetResource):
                 await self.client._patch("https://dpa.com/resource", '{"one": 1}', 200)
@@ -237,6 +241,7 @@ class LiveblogSourceTests(asynctest.TestCase):
     async def test_get(self):
         with asynctest.patch("aiohttp.client.ClientSession") as patched:
             patched.get = TestResponse
+            patched.close = asynctest.CoroutineMock(return_value=None)
             self.client._session = patched
             res = await self.client._get("https://dpa.com/resource", status=201)
             assert type(res) == dict
@@ -250,7 +255,7 @@ class LiveblogSourceTests(asynctest.TestCase):
         res = await self.client._get(None)
         assert res == {}
 
-    @asynctest.ignore_loop
+    @asynctest.fail_on(unused_loop=False)
     def test_reset_blog_meta(self):
         self.client._source_meta = {"foo": "bla"}
         self.client._reset_source_meta()

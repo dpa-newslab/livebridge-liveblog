@@ -63,7 +63,7 @@ class LiveblogClient(object):
         headers = {"Content-Type": "application/json;charset=utf-8"}
         if self.session_token:
             headers.update(self._get_auth_header())
-        conn = aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
+        conn = aiohttp.TCPConnector(ssl=self.verify_ssl)
         self._session = aiohttp.ClientSession(connector=conn, headers=headers, conn_timeout=10)
         return self._session
 
