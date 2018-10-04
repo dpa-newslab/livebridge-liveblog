@@ -15,7 +15,7 @@
 # limitations under the License.
 from setuptools import setup, find_packages
 
-version = '0.6rc0'
+version = '0.6.0'
 
 setup(name='livebridge-liveblog',
       version=version,
