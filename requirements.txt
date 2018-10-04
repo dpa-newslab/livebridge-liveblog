@@ -1,1 +1,1 @@
-livebridge>=0.26rc0
+livebridge>=0.26.0
