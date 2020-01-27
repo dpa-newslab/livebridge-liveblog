@@ -87,11 +87,15 @@ class LiveblogSource(LiveblogClient, PollingSource):
 
         # look for filter_tags
         if self.filter_tags is not None:
-            tags = re.split(", *", self.filter_tags)
-            logger.info("Filtering "+ str(self.source_id) + " for tags: "+", ".join(tags))
-            post_filter = { "terms" : { "tags" : tags }}
-            source["post_filter"] = post_filter
-
+            try:
+                tags = re.split(", *", self.filter_tags)
+            except Exception as e:
+                logger.error("failed to split config value filter_tags with /, */: "+repr(e))
+                tags = []
+            else:
+                logger.info("Filtering "+ str(self.source_id) + " for tags: "+", ".join(tags))
+                post_filter = { "terms" : { "tags" : tags }}
+                source["post_filter"] = post_filter
         return urlencode([
             ("max_results", 20),
             ("page", 1),

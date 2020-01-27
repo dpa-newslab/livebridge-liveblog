@@ -63,6 +63,7 @@ class LiveblogSourceTests(asynctest.TestCase):
             },
             "source_id": 12345,
             "endpoint": "https://example.com/api",
+            "filter_tags": "bdt, lby",
             "label": "Testlabel",
             "verify_ssl": False,
         }
@@ -83,6 +84,7 @@ class LiveblogSourceTests(asynctest.TestCase):
         assert self.client.endpoint == self.conf["endpoint"]
         assert self.client.label == self.conf["label"]
         assert self.client.verify_ssl == self.conf["verify_ssl"]
+        assert self.client.filter_tags == self.conf["filter_tags"]
         assert issubclass(LiveblogSource, LiveblogClient) == True
         assert issubclass(LiveblogSource, PollingSource) == True
 
@@ -133,13 +135,30 @@ class LiveblogSourceTests(asynctest.TestCase):
             close=asynctest.CoroutineMock(return_value=None))
         res = await self.client._get("http://example.com")
         assert res == {}
- 
+
     async def test_get_posts_url(self):
         self.client.last_updated = datetime(2014,10,20, 14, 48, 34)
         url = await self.client._get_posts_url()
         assert type(url) == str
         assert True == url.startswith("https://example.com/api/client_blogs/12345/posts?max_results=20&page=1&source=%7B%22")
         assert True == url.endswith("%7D")
+
+
+    async def test_filter_tags_url(self):
+        """
+            filter_tags config value should result in post_filter parameter
+            for query
+        """
+        self.client.last_updated = datetime(2014,10,20, 14, 48, 34)
+        url = await self.client._get_posts_url()
+        assert True == url.endswith("post_filter%22%3A+%7B%22terms%22%3A+%7B%22tags%22%3A+%5B%22bdt%22%2C+%22lby%22%5D%7D%7D%7D")
+        temp = self.client.filter_tags
+        for testvalue in (False, None):
+            self.client.filter_tags = testvalue
+            url = await self.client._get_posts_url()
+            assert True == url.endswith("%22order%22%3A+%22asc%22%7D%7D%5D%7D")
+        self.client.filter_tags = temp
+
 
     async def test_get_posts_params_new(self):
         # without last_updated time
