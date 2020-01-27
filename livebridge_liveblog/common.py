@@ -43,6 +43,7 @@ class LiveblogClient(object):
         self.label = config.get("label")
         self.save_as_draft = config.get("draft", False)
         self.save_as_contribution = config.get("submit", False)
+        self.filter_tags = config.get("filter_tags", None)
         self._session = None
 
         self._source_meta = {}

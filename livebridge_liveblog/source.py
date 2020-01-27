@@ -17,6 +17,7 @@ import aiohttp
 import asyncio
 import json
 import logging
+import re
 from datetime import datetime
 from os.path import join as path_join
 from urllib.parse import urlencode, urljoin
@@ -64,6 +65,7 @@ class LiveblogSource(LiveblogClient, PollingSource):
         # define "updated" filter param
         updated = await self._get_updated()
 
+
         # build query param
         source = {"query": {
                         "filtered": {
@@ -82,6 +84,14 @@ class LiveblogSource(LiveblogClient, PollingSource):
                         }
                     }],
                 }
+
+        # look for filter_tags
+        if self.filter_tags is not None:
+            tags = re.split(", *", self.filter_tags)
+            logger.info("Filtering "+ str(self.source_id) + " for tags: "+", ".join(tags))
+            post_filter = { "terms" : { "tags" : tags }}
+            source["post_filter"] = post_filter
+
         return urlencode([
             ("max_results", 20),
             ("page", 1),
