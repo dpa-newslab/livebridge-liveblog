@@ -22,7 +22,7 @@ See http://livebridge.readthedocs.io/en/latest/plugins.html#installing-plugins f
 Under **bridges**:
 * **source_id** - Blog-ID/Hash of the Liveblog
 * **endpoint** - API endpoint of the Liveblog
-* **filter_tags** - Filter the Liveblog posts by tags. Must be a string of tags separated by ", ", e.g. "bdt, lby". Default: **None** for no filtering. For newer versions of Liveblog, editors can add tags to posts. 
+* **filter_tags** - Filter the Liveblog posts by tags. Must be a string of tags separated by ", ", e.g. "bdt, lby". Default: **None** for no filtering. Editors can tag Liveblog posts, filtering enables the livebridge to only forward posts that contain the tags listed in this parameter. Liveblog has to be v3.7.0 or newer, see the [relese notes](https://github.com/liveblog/liveblog/releases/tag/v3.7.0). 
 * **verify_ssl** - SSL check for source, default **true**
 * **source_check_interval** - Interval in seconds for blog status checks (open/closed), defaults to **600**
 
@@ -82,6 +82,6 @@ Run tests with test coverage:
 [pytest-cov](https://pypi.python.org/pypi/pytest-cov) has to be installed. In the example above, a html summary of the test coverage is saved in **./htmlcov/**.
 
 ## License
-Copyright 2016 dpa-infocom GmbH
+Copyright 2016-2020 dpa-infocom GmbH
 
 Apache License, Version 2.0 - see LICENSE for details
