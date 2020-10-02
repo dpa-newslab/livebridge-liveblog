@@ -24,6 +24,8 @@ from livebridge.base import InvalidTargetResource
 
 logger = logging.getLogger(__name__)
 
+def comma_split(s):
+    return tuple(map(lambda a: a.strip(), s.split(",")))
 
 class LiveblogClient(object):
 
@@ -47,7 +49,7 @@ class LiveblogClient(object):
         if filter_tags is not None:
             if type(filter_tags) == str:
                 # tags config can contain tags separated by ",", whitespace is stripped
-                filter_tags = tuple(map(lambda a: a.strip(), filter_tags.split(",")))
+                filter_tags = comma_split(filter_tags)
         self.filter_tags = filter_tags
         self._session = None
 

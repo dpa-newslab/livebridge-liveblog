@@ -18,7 +18,7 @@ import aiohttp
 import json
 from datetime import datetime
 from urllib.parse import parse_qs
-from livebridge_liveblog.common import LiveblogClient
+from livebridge_liveblog.common import LiveblogClient, comma_split
 from livebridge_liveblog import LiveblogPost, LiveblogSource
 from livebridge.base import PollingSource, InvalidTargetResource
 from tests import load_json
@@ -84,7 +84,7 @@ class LiveblogSourceTests(asynctest.TestCase):
         assert self.client.endpoint == self.conf["endpoint"]
         assert self.client.label == self.conf["label"]
         assert self.client.verify_ssl == self.conf["verify_ssl"]
-        assert self.client.filter_tags == self.conf["filter_tags"]
+        assert self.client.filter_tags == comma_split(self.conf["filter_tags"])
         assert issubclass(LiveblogSource, LiveblogClient) == True
         assert issubclass(LiveblogSource, PollingSource) == True
 
@@ -151,12 +151,12 @@ class LiveblogSourceTests(asynctest.TestCase):
         """
         self.client.last_updated = datetime(2014,10,20, 14, 48, 34)
         url = await self.client._get_posts_url()
-        assert True == url.endswith("post_filter%22%3A+%7B%22terms%22%3A+%7B%22tags%22%3A+%5B%22bdt%22%2C+%22lby%22%5D%7D%7D%7D")
+        assert url.find("post_filter%22%3A+%7B%22terms%22%3A+%7B%22tags%22%3A+%5B%22bdt%22%2C+%22lby%22%5D") > -1
         temp = self.client.filter_tags
         for testvalue in (False, None):
             self.client.filter_tags = testvalue
             url = await self.client._get_posts_url()
-            assert True == url.endswith("%22order%22%3A+%22asc%22%7D%7D%5D%7D")
+            assert url.find("%22order%22%3A+%22asc%22") > -1
         self.client.filter_tags = temp
 
 

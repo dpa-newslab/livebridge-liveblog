@@ -88,7 +88,7 @@ class LiveblogSource(LiveblogClient, PollingSource):
         # look for filter_tags
         if self.filter_tags is not None:
             tags = self.filter_tags
-            logger.info("Filtering input "+ str(self.source_id) + " for tags: "+", ".join(tags))
+            logger.info("Filtering input "+ str(self.source_id) + " for tags: "+ repr(tags))
             source["post_filter"] = { "terms" : { "tags" : tags }}
         return urlencode([
             ("max_results", 20),
