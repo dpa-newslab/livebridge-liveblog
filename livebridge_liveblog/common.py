@@ -43,7 +43,12 @@ class LiveblogClient(object):
         self.label = config.get("label")
         self.save_as_draft = config.get("draft", False)
         self.save_as_contribution = config.get("submit", False)
-        self.filter_tags = config.get("filter_tags", None)
+        filter_tags = config.get("filter_tags", None)
+        if filter_tags is not None:
+            if type(filter_tags) == str:
+                # tags config can contain tags separated by ",", whitespace is stripped
+                filter_tags = tuple(map(lambda a: a.strip(), filter_tags.split(",")))
+        self.filter_tags = filter_tags
         self._session = None
 
         self._source_meta = {}
