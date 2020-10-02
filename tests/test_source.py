@@ -289,3 +289,9 @@ class LiveblogSourceTests(asynctest.TestCase):
         self.client._get = asynctest.CoroutineMock(return_value={"blog_status": "closed"})
         res = await self.client._is_source_open()
         assert res == False
+
+
+def test_comma_split():
+    assert comma_split("a") == ("a", )
+    assert comma_split("a, b c") == ("a", "b c")
+
