@@ -26,7 +26,7 @@ class LiveblogLiveblogConverter(BaseConverter):
     target = "liveblog"
 
     async def _convert_image(self, item):
-        logger.debug("CONVERTING IMAGE")
+        logger.debug("[liveblog -> liveblog] converting image")
         content = ""
         tmp_path = None
         try:
@@ -46,26 +46,26 @@ class LiveblogLiveblogConverter(BaseConverter):
         return content, tmp_path
 
     async def _convert_text(self, item):
-        logger.debug("CONVERTING TEXT")
+        logger.debug("[liveblog -> liveblog] converting text")
         text = item["item"]["text"].strip()
         content = {"text":text,"item_type":"text"}
         return content
 
     async def _convert_quote(self, item):
-        logger.debug("CONVERTING QUOTE")
+        logger.debug("[liveblog -> liveblog] converting quote")
         meta = item["item"]["meta"]
         content = {"text": item["item"]["text"],"meta": item["item"]["meta"],"item_type":"quote"}
         return content
 
     async def _convert_embed(self, item):
-        logger.debug("CONVERTING EMBED")
+        logger.debug("[liveblog -> liveblog] converting embed")
         content = {"text": item["item"]["text"],"meta": item["item"]["meta"],"item_type":"embed"}
         return content
 
     async def convert(self, post):
         post_items = []
         images = []
-        logger.debug("####")
+        logger.debug("[liveblog -> liveblog] convert")
         logger.debug(post)
         try:
             for g in post.get("groups", []):
@@ -85,8 +85,8 @@ class LiveblogLiveblogConverter(BaseConverter):
                     elif item["item"]["item_type"] == "embed":
                         post_items.append(await self._convert_embed(item))
                     else:
-                        logger.debug("CONVERSION UNKNOWN")
-                        logger.debug("Typ: {}".format(item["type"]))
+                        logger.debug("[liveblog -> liveblog] unknown conversion")
+                        logger.debug("Type: {}".format(item["type"]))
                         logger.debug("Item-Type: {}".format(item["item"]["item_type"]))
                         logger.debug(item)
                         logger.debug("\n\n")
