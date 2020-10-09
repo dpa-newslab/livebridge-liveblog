@@ -22,7 +22,7 @@ See http://livebridge.readthedocs.io/en/latest/plugins.html#installing-plugins f
 Under **bridges**:
 * **source_id** - Blog-ID/Hash of the Liveblog
 * **endpoint** - API endpoint of the Liveblog
-* **filter_tags** - Filter the Liveblog posts by tags. Must be a string of tags separated by ", ", e.g. "bdt, lby". Default: **None** for no filtering. Editors can tag Liveblog posts, filtering enables the livebridge to only forward posts that contain the tags listed in this parameter. Liveblog has to be v3.7.0 or newer, see the [relese notes](https://github.com/liveblog/liveblog/releases/tag/v3.7.0). 
+* **filter_tags** - (new in 0.6.2) Filter the Liveblog posts by tags. If you want to filter by more than one tag, the parameter must be a string of tags separated by ", ", e.g. "bdt, lby". Default: **None** for no filtering. Editors can tag Liveblog posts, filtering enables the livebridge to only forward posts that contain the tag / at least one of the the tags listed in this parameter. Liveblog has to be v3.7.0 or newer, see the [relese notes](https://github.com/liveblog/liveblog/releases/tag/v3.7.0) for Liveblogs.
 * **verify_ssl** - SSL check for source, default **true**
 * **source_check_interval** - Interval in seconds for blog status checks (open/closed), defaults to **600**
 
