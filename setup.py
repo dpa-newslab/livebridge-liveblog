@@ -15,7 +15,7 @@
 # limitations under the License.
 from setuptools import setup, find_packages
 
-version = '0.6.1-pre0'
+version = '0.6.2'
 
 setup(name='livebridge-liveblog',
       version=version,
@@ -26,6 +26,7 @@ See https://github.com/dpa-newslab/livebridge-liveblog for more infos.
 """,
       classifiers=[
         "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
         "Topic :: Communications",
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
